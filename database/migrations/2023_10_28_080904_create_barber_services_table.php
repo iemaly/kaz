@@ -19,8 +19,6 @@ return new class extends Migration
             $table->foreign('barber_id')->references('id')->on('barbers')->onDelete('cascade');
             $table->string('title');
             $table->longtext('description')->nullable();
-            $table->time('start_time');
-            $table->time('end_time');
             $table->string('image')->nullable();
             $table->tinyInteger('status')->default(1);
             $table->timestamps();

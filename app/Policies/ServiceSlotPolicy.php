@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\BookedService;
+use App\Models\ServiceSlot;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class BookedServicePolicy
+class ServiceSlotPolicy
 {
     use HandlesAuthorization;
 
@@ -25,10 +25,10 @@ class BookedServicePolicy
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\BookedService  $bookedService
+     * @param  \App\Models\ServiceSlot  $serviceSlot
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, BookedService $bookedService)
+    public function view(User $user, ServiceSlot $serviceSlot)
     {
         //
     }
@@ -48,10 +48,10 @@ class BookedServicePolicy
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\BookedService  $bookedService
+     * @param  \App\Models\ServiceSlot  $serviceSlot
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, BookedService $bookedService)
+    public function update(User $user, ServiceSlot $serviceSlot)
     {
         //
     }
@@ -60,10 +60,10 @@ class BookedServicePolicy
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\BookedService  $bookedService
+     * @param  \App\Models\ServiceSlot  $serviceSlot
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, BookedService $bookedService)
+    public function delete(User $user, ServiceSlot $serviceSlot)
     {
         //
     }
@@ -72,10 +72,10 @@ class BookedServicePolicy
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\BookedService  $bookedService
+     * @param  \App\Models\ServiceSlot  $serviceSlot
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, BookedService $bookedService)
+    public function restore(User $user, ServiceSlot $serviceSlot)
     {
         //
     }
@@ -84,10 +84,10 @@ class BookedServicePolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\BookedService  $bookedService
+     * @param  \App\Models\ServiceSlot  $serviceSlot
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, BookedService $bookedService)
+    public function forceDelete(User $user, ServiceSlot $serviceSlot)
     {
         //
     }

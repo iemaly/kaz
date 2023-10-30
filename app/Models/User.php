@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -46,13 +46,11 @@ class User extends Authenticatable
 
     // RELATION
 
-    public function images()
+    // ACCESSOR
+    protected function image(): Attribute
     {
-        return $this->hasMany(UserImage::class, 'user_id', 'id');
-    }
-
-    public function qualifications()
-    {
-        return $this->hasMany(UserQualification::class, 'user_id', 'id');
+        return Attribute::make(
+            fn ($value) => !empty($value)?asset($value):'',
+        );
     }
 }

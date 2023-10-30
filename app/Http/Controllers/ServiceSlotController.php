@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreBookedServiceRequest;
-use App\Http\Requests\UpdateBookedServiceRequest;
-use App\Models\BookedService;
+use App\Http\Requests\StoreServiceSlotRequest;
+use App\Http\Requests\UpdateServiceSlotRequest;
+use App\Models\ServiceSlot;
 
-class BookedServiceController extends Controller
+class ServiceSlotController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -31,10 +31,10 @@ class BookedServiceController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \App\Http\Requests\StoreBookedServiceRequest  $request
+     * @param  \App\Http\Requests\StoreServiceSlotRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(StoreBookedServiceRequest $request)
+    public function store(StoreServiceSlotRequest $request)
     {
         //
     }
@@ -42,10 +42,10 @@ class BookedServiceController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\BookedService  $bookedService
+     * @param  \App\Models\ServiceSlot  $serviceSlot
      * @return \Illuminate\Http\Response
      */
-    public function show(BookedService $bookedService)
+    public function show(ServiceSlot $serviceSlot)
     {
         //
     }
@@ -53,10 +53,10 @@ class BookedServiceController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\BookedService  $bookedService
+     * @param  \App\Models\ServiceSlot  $serviceSlot
      * @return \Illuminate\Http\Response
      */
-    public function edit(BookedService $bookedService)
+    public function edit(ServiceSlot $serviceSlot)
     {
         //
     }
@@ -64,11 +64,11 @@ class BookedServiceController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Http\Requests\UpdateBookedServiceRequest  $request
-     * @param  \App\Models\BookedService  $bookedService
+     * @param  \App\Http\Requests\UpdateServiceSlotRequest  $request
+     * @param  \App\Models\ServiceSlot  $serviceSlot
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateBookedServiceRequest $request, BookedService $bookedService)
+    public function update(UpdateServiceSlotRequest $request, ServiceSlot $serviceSlot)
     {
         //
     }
@@ -76,10 +76,10 @@ class BookedServiceController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\BookedService  $bookedService
+     * @param  \App\Models\ServiceSlot  $serviceSlot
      * @return \Illuminate\Http\Response
      */
-    public function destroy(BookedService $bookedService)
+    public function destroy(ServiceSlot $serviceSlot)
     {
         //
     }

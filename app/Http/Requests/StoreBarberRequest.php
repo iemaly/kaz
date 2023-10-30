@@ -3,9 +3,22 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Elegant\Sanitizer\Laravel\SanitizesInput;
 
 class StoreBarberRequest extends FormRequest
 {
+    use SanitizesInput;
+    
+    // public function filters()
+    // {
+    //     return [
+    //         'fname' => 'trim|strip_tags',
+    //         'lname' => 'trim|strip_tags',
+    //         'email' => 'trim|strip_tags',
+    //         'password' => 'trim|strip_tags',
+    //     ];
+    // }
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -13,7 +26,7 @@ class StoreBarberRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +37,11 @@ class StoreBarberRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'fname' => 'required',
+            'lname' => 'nullable',
+            'email' => 'required|email|unique:barbers,email',
+            'password' => 'nullable',
+            'image' => 'nullable',
         ];
     }
 }

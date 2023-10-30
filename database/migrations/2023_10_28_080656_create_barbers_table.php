@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('fname');
             $table->string('lname');
             $table->string('email')->unique();
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->string('image')->nullable();
             $table->string('reset_token')->nullable();
             $table->string('auth_token')->nullable();

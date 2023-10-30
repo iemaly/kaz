@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
-use App\Models\UserImage;
-use App\Models\UserQualification;
 
 class UserController extends Controller
 {
@@ -18,44 +16,28 @@ class UserController extends Controller
 
     function index()
     {
-        $users = User::with('qualifications', 'images')->orderBy('id', 'desc')->get();
+        $users = User::orderBy('id', 'desc')->get();
         return response()->json(['status' => true, 'data' => $users]);
     }
 
     function store(StoreUserRequest $request)
     {
         $request = $request->validated();
-        $qualificaitons = $request['qualifications']??[];
-        $images = $request['images']??[];
-        unset($request['qualifications']);
-        unset($request['images']);
 
         try {
             !empty($request['password']) ? $request['password'] = bcrypt($request['password']) : '';
+            if (!empty($request['image'])) 
+            {
+                $imageName = 'uploads/user/images/'.$request['image']->getClientOriginalName().'.'.$request['image']->extension();
+                $request['image']->move(public_path('uploads/user/images'), $imageName);
+                $request['image']=$imageName;
+            }
             $user = User::create($request);
-
-            // STORE QUALIFICATION
-            if (!empty($qualificaitons)) {
-                // return $request;
-                foreach ($qualificaitons as $qualification) {
-                    $filePath = $this->uploadImage($qualification, 'uploads/users/qualifications/', Str::random(25));
-                    $user->qualifications()->create(['qualification'=>$filePath]);
-                }
-            }
-
-            // STORE IMAGE
-            if (!empty($images)) {
-                // return $request;
-                foreach ($images as $image) {
-                    $filePath = $this->uploadImage($image, 'uploads/users/images/', Str::random(25));
-                    $user->images()->create(['image'=>$filePath]);
-                }
-            }
 
             // SEND WELCOME MAIL
             // Mail::to($user->email)->send(new JudgeWelcomeMail);
 
-            return response()->json(['status' => true, 'response' => 'Record Created', 'data' => $user->load('qualifications', 'images')]);
+            return response()->json(['status' => true, 'response' => 'Record Created', 'data' => $user]);
         } catch (\Throwable $th) {
             // return response()->json(['status' => false, 'error' => $th]);
             return response()->json(['status' => false, 'error' => $th->getMessage()]);
@@ -76,9 +58,9 @@ class UserController extends Controller
         }
     }
 
-    function show($user)
+    function show(User $user)
     {
-        $user = User::with('qualifications', 'images')->find($user);
+        if(auth('user_api')->check()) $user = auth()->user();
         return response()->json(['status' => true, 'data' => $user]);
     }
 
@@ -103,73 +85,43 @@ class UserController extends Controller
         return response()->json(['status' => true, 'response' => "Account deactivated"]);
     }
 
-    function storeImages(User $user)
+    function updateImage()
     {
         $validator = Validator::make(
             request()->all(),
             [
-                'images' => 'required|array',
-                'images.*' => 'required|mimes:jpeg,jpg,png,gif|max:30000',
+                'image' => 'required|mimes:jpeg,jpg,png,gif|max:30000',
             ]
         );
 
-        $validatedData = $validator->validated();
-
         if ($validator->fails()) return response()->json(['status' => false, 'error' => $validator->errors()]);
+
         try {
-            // UPLOADING
-            foreach ($validatedData['images'] as $image) {
-                $filePath = $this->uploadImage($image, 'uploads/users/images/');
-                $user->images()->create(['image' => $filePath]);
+            $user = auth()->user();
+            // DELETING OLD IMAGE IF EXISTS
+            if (!empty($user->image)) {
+                $this->deleteImage($user->image);
+                $user->update(['image' => (NULL)]);
             }
-            return response()->json(['status' => true, 'response' => 'Images Added']);
+
+            // UPLOADING NEW IMAGE
+            $filePath = $this->uploadImage(request()->image, 'uploads/user/images');
+            $user->update(['image' => $filePath]);
+            return response()->json(['status' => true, 'response' => 'Image Updated']);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'error' => $th->getMessage()]);
         }
     }
 
-    function imageDelete(UserImage $user_image)
+    function imageDelete()
     {
-        if (!empty($user_image->image)) {
-            // dd($user_image);
-            $this->deleteImage($user_image->image);
-            $user_image->delete();
+        $user = auth()->user();
+
+        if (!empty($user->image)) {
+            $this->deleteImage($user->image);
+            $user->update(['image' => '']);
         }
         return response()->json(['status' => true, 'response' => 'Image Deleted']);
-    }
-
-    function storeQualifications(User $user)
-    {
-        $validator = Validator::make(
-            request()->all(),
-            [
-                'qualifications' => 'required|array',
-                'qualifications.*' => 'required',
-            ]
-        );
-
-        $validatedData = $validator->validated();
-
-        if ($validator->fails()) return response()->json(['status' => false, 'error' => $validator->errors()]);
-        try {
-            // UPLOADING
-            foreach ($validatedData['qualifications'] as $qualification) {
-                $filePath = $this->uploadImage($qualification, 'uploads/users/qualifications/');
-                $user->qualifications()->create(['qualification' => $filePath]);
-            }
-            return response()->json(['status' => true, 'response' => 'Qualifications Added']);
-        } catch (\Throwable $th) {
-            return response()->json(['status' => false, 'error' => $th->getMessage()]);
-        }
-    }
-
-    function deleteQualification(UserQualification $user_qualification)
-    {
-        if (!empty($user_qualification->qualification)) {
-            $this->deleteImage($user_qualification->qualification);
-            $user_qualification->delete();
-        }
-        return response()->json(['status' => true, 'response' => 'Qualification Deleted']);
     }
 
     function setAndSendPassword($user)
@@ -186,5 +138,59 @@ class UserController extends Controller
         // DISPATCHING JOB
         Mail::to($user->email)->send(new JudgeCredentialMail($data));
         return response()->json(['status' => true, 'response' => 'Credentials will be sent shortly.']);
+    }
+
+    protected function forget()
+    {
+        $validator = Validator::make(
+            request()->all(),
+            [
+                'email' => 'required|min:6|max:50',
+            ]
+        );
+
+        if ($validator->fails()) return response(['status' => false, 'errors' => $validator->errors()]);
+
+        $user = User::where('email', request()->email)->first();
+        if ($user == null) {
+            return response(['status' => false, 'message' => 'It looks like we do not have this account!']);
+        } else {
+            $token = rand(1000, 9999);
+
+            Mail::raw("$token", function ($message) {
+                $message->to(request()->email)->subject('Forget Password');
+                $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+            });
+
+            $user->reset_token = $token;
+            if ($user->update()) return response(['status' => true, 'message' => 'Reset Token Has Been Sent! Check Your Email For The Link']);
+        }
+    }
+
+    protected function resetPwd()
+    {
+        $controls = request()->all();
+        $rules = array(
+            'password' => 'required|confirmed|min:6|max:60',
+            'token' => 'required|digits:4',
+            'password_confirmation' => 'required|min:6|max:60',
+        );
+        $messages = [
+            'password.required' => 'Password is Required field',
+            'password_confirmation.required' => 'Password Confirmation is Required field',
+        ];
+        $validator = Validator::make($controls, $rules, $messages);
+        if ($validator->fails()) {
+            return response(['status' => false, 'errors' => $validator->errors()]);
+        }
+
+        $user = User::where('reset_token', request()->token)->first();
+        if ($user != null) {
+            $user->password = bcrypt(request()->password);
+            $user->reset_token = null;
+            $user->update();
+            return response(['status' => true, 'errors' => 'Password Updated']);
+        }
+        return response(['status' => false, 'errors' => 'Token Incorrect Or Token Expired']);
     }
 }

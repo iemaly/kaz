@@ -37,7 +37,7 @@ class AdminController extends Controller
         return response()->json(['status' => true, 'data' => $admin]);
     }
 
-    protected function forgetPwdProcess()
+    protected function forget()
     {
         $validator = Validator::make(
             request()->all(),
@@ -64,7 +64,7 @@ class AdminController extends Controller
         }
     }
 
-    protected function resetPwdProcess()
+    protected function resetPwd()
     {
         $controls = request()->all();
         $rules = array(
