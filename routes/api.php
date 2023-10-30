@@ -13,6 +13,9 @@ Route::group(['middleware' => 'auth:admin_api', 'prefix' => 'admin'], function (
     Route::resource('/barbers', 'App\Http\Controllers\BarberController');
     Route::put('/barbers/{barber}/active_deactive', [App\Http\Controllers\BarberController::class, 'activate']);
     
+    // BARBER SERVICES
+    Route::resource('/barbers/{barber}/services', 'App\Http\Controllers\BarberServiceController');
+    
     // BARBER IMAGE
     Route::post('/barbers/{barber}/update_image', [App\Http\Controllers\BarberController::class, 'updateImage']);
     Route::delete('/barbers/{barber}/delete_image', [App\Http\Controllers\BarberController::class, 'imageDelete']);

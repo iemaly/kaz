@@ -10,6 +10,13 @@ class Barber extends Model
 {
     use HasFactory;
 
+    // RELATION
+
+    public function services()
+    {
+        return $this->hasMany(BarberService::class, 'barber_id', 'id');
+    }
+
     // ACCESSOR
     protected function image(): Attribute
     {
