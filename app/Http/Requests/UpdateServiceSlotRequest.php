@@ -13,7 +13,7 @@ class UpdateServiceSlotRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +24,8 @@ class UpdateServiceSlotRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'start_time' => 'required',
+            'end_time' => 'required',
         ];
     }
 }

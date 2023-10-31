@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreServiceSlotRequest;
 use App\Http\Requests\UpdateServiceSlotRequest;
+use App\Models\BarberService;
 use App\Models\ServiceSlot;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -17,9 +18,9 @@ class ServiceSlotController extends Controller
     function store(StoreServiceSlotRequest $request)
     {
         $validator = Validator::make(
-            ['service_id' => $request->route('service')],
+            ['service_id' => request()->barber_service],
             ['service_id' => [
-                Rule::exists('barbers', 'id'),
+                Rule::exists('barber_services', 'id'),
             ]]
         );
     
@@ -30,82 +31,37 @@ class ServiceSlotController extends Controller
         $request = $request->validated();
 
         try {
-            $request['service_id'] = $request->route('service');
-            $slot = ServiceSlot::create($request);
+            foreach($request['slot'] as $slot)
+            {
+                $slot['service_id'] = request()->barber_service;
+                ServiceSlot::create($slot);
+            }
 
-            return response()->json(['status' => true, 'response' => 'Record Created', 'data' => $slot]);
+            return response()->json(['status' => true, 'response' => 'Record Created']);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'error' => $th->getMessage()]);
         }
     }
 
-    function update(UpdateBarberServiceRequest $request, BarberService $barber_service)
+    function update(UpdateServiceSlotRequest $request, BarberService $barber_service,ServiceSlot $slot)
     {
-        $validator = Validator::make(
-            ['barber_id' => $request->route('barber')],
-            ['barber_id' => [
-                Rule::exists('barbers', 'id'),
-            ]]
-        );
-    
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()], 400);
-        }
-
         $request = $request->validated();
 
         try {
-            $request['barber_id'] = request()->barber;
-            $barber_service->update($request);
-            return response()->json(['status' => true, 'response' => 'Record Updated', 'data' => $barber_service]);
+            $slot->update($request);
+            return response()->json(['status' => true, 'response' => 'Record Updated', 'data' => $slot]);
         } catch (\Throwable $th) {
             return response()->json(['status' => false, 'error' => $th->getMessage()]);
         }
     }
 
-    function show(BarberService $barber_service)
+    function show(ServiceSlot $slot)
     {
-        return response()->json(['status' => true, 'data' => $barber_service]);
+        return response()->json(['status' => true, 'data' => $slot]);
     }
 
-    function destroy(BarberService $barber_service)
+    function destroy(BarberService $barber_service, ServiceSlot $slot)
     {
-        return $barber_service->delete();
-    }
-
-    function updateImage(BarberService $barber_service)
-    {
-        $validator = Validator::make(
-            request()->all(),
-            [
-                'image' => 'required|mimes:jpeg,jpg,png,gif|max:30000',
-            ]
-        );
-
-        if ($validator->fails()) return response()->json(['status' => false, 'error' => $validator->errors()]);
-
-        try {
-            // DELETING OLD IMAGE IF EXISTS
-            if (!empty($barber_service->image)) {
-                $this->deleteImage($barber_service->image);
-                $barber_service->update(['image' => (NULL)]);
-            }
-
-            // UPLOADING NEW IMAGE
-            $filePath = $this->uploadImage(request()->image, 'uploads/barber/services');
-            $barber_service->update(['image' => $filePath]);
-            return response()->json(['status' => true, 'response' => 'Image Updated']);
-        } catch (\Throwable $th) {
-            return response()->json(['status' => false, 'error' => $th->getMessage()]);
-        }
-    }
-
-    function imageDelete(BarberService $barber_service)
-    {
-        if (!empty($barber_service->image)) {
-            $this->deleteImage($barber_service->image);
-            $barber_service->update(['image' => '']);
-        }
-        return response()->json(['status' => true, 'response' => 'Image Deleted']);
+        return $slot->delete();
     }
 }

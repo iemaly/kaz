@@ -44,6 +44,7 @@ class StoreBarberServiceRequest extends FormRequest
             ]],
             'title' => 'required',
             'description' => 'nullable',
+            'price' => 'required|numeric',
             'image' => 'nullable|file',
         ];
     }

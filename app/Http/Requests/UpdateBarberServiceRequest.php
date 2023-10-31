@@ -39,6 +39,7 @@ class UpdateBarberServiceRequest extends FormRequest
         return [
             'title' => 'required',
             'description' => 'nullable',
+            'price' => 'required|numeric',
             'image' => 'nullable|file',
         ];
     }

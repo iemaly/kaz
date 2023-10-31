@@ -16,7 +16,7 @@ class BarberController extends Controller
 
     function index()
     {
-        $barbers = Barber::orderBy('id', 'desc')->get();
+        $barbers = Barber::with('services.timeslots')->orderBy('id', 'desc')->get();
         return response()->json(['status' => true, 'data' => $barbers]);
     }
 
@@ -26,11 +26,10 @@ class BarberController extends Controller
 
         try {
             !empty($request['password']) ? $request['password'] = bcrypt($request['password']) : '';
-            if (!empty($request['image'])) 
-            {
-                $imageName = 'uploads/barber/images/'.$request['image']->getClientOriginalName().'.'.$request['image']->extension();
+            if (!empty($request['image'])) {
+                $imageName = 'uploads/barber/images/' . $request['image']->getClientOriginalName() . '.' . $request['image']->extension();
                 $request['image']->move(public_path('uploads/barber/images'), $imageName);
-                $request['image']=$imageName;
+                $request['image'] = $imageName;
             }
             $barber = Barber::create($request);
 
@@ -60,9 +59,30 @@ class BarberController extends Controller
 
     function show($barber)
     {
-        $barber = Barber::find($barber);
+        // Find the barber with their associated services, time slots, and bookings
+        $barber = Barber::with('services.timeslots.bookings')->find($barber);
+
+        // Get the date from the request, or use the current date if not provided
+        $date = request('date', now()->toDateString());
+
+        // Loop through the barber's services
+        foreach ($barber->services as $service) {
+            // Loop through the time slots for each service
+            foreach ($service->timeslots as $timeslot) {
+                // Check if there are any bookings for this timeslot on the specified date
+                $isAvailable = $timeslot->bookings
+                    ->where('date', $date)
+                    ->isEmpty();
+
+                // Add the 'is_available' attribute to the timeslot with the result
+                $timeslot->is_available = $isAvailable;
+            }
+        }
+
+        // Return the response with the updated data
         return response()->json(['status' => true, 'data' => $barber]);
     }
+
 
     function destroy($barber)
     {

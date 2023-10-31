@@ -15,6 +15,7 @@ Route::group(['middleware' => 'auth:admin_api', 'prefix' => 'admin'], function (
     
     // BARBER SERVICES
     Route::resource('/barbers/{barber}/services', 'App\Http\Controllers\BarberServiceController');
+    Route::resource('/services/{barber_service}/slots', 'App\Http\Controllers\ServiceSlotController');
     
     // BARBER IMAGE
     Route::post('/barbers/{barber}/update_image', [App\Http\Controllers\BarberController::class, 'updateImage']);
@@ -31,6 +32,9 @@ Route::group(['middleware' => 'auth:user_api', 'prefix' => 'user'], function () 
     Route::put('/profile', [App\Http\Controllers\UserController::class, 'update']);
     Route::post('/profile/update_image', [App\Http\Controllers\UserController::class, 'updateImage']);
     Route::delete('/profile/delete_image', [App\Http\Controllers\UserController::class, 'imageDelete']);
+
+    // BOOKING
+    Route::post('/{barber_service}/booking', [App\Http\Controllers\UserController::class, 'pay']);
 });
 
 // UNIVERSAL ROUTES
@@ -46,4 +50,7 @@ Route::middleware(['throttle:60,1'])->group(function () {
     // BARBER
     Route::get('/barbers', [App\Http\Controllers\BarberController::class, 'index']);
     Route::get('/barbers/{barber}', [App\Http\Controllers\BarberController::class, 'show']);
+    
+    // BOOKING STORE
+    Route::get('/booking', [App\Http\Controllers\UserController::class, 'payStore'])->name('users.services.booking');
 });

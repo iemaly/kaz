@@ -2,13 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Traits\ImageUploadTrait;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Http\Requests\UpdateUserRequest;
+use App\Mail\BarberBookingMail;
+use App\Mail\UserBookingMail;
+use App\Models\BarberService;
+use App\Models\Booking;
+use App\Models\ServiceSlot;
 use App\Models\User;
+use Exception;
 
 class UserController extends Controller
 {
@@ -192,5 +199,58 @@ class UserController extends Controller
             return response(['status' => true, 'errors' => 'Password Updated']);
         }
         return response(['status' => false, 'errors' => 'Token Incorrect Or Token Expired']);
+    }
+
+    // PLAN MANAGEMENT
+    public function pay(StoreBookingRequest $request, BarberService $barber_service)
+    {
+        $validatedRequest = $request->validated();
+        $amount = $barber_service->price;
+        try {
+            $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
+            $checkout_session = $stripe->checkout->sessions->create([
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'usd',
+                        'product_data' => [
+                            'name' => $barber_service->title,
+                        ],
+                        'unit_amount' =>  $amount * 100,
+                    ],
+                    'quantity' => 1,
+                ]],
+                'metadata' => [
+                    'slot' => $request['slot_id'],
+                    'user' => auth()->id(),
+                    'date' => $request['date'],
+                ],
+                'customer_email' => auth()->user()->email,
+                'mode' => 'payment',
+                'success_url' => route('users.services.booking') . '?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => env('PAYMENT_CANCEL_URL').'?cancel',
+            ]);
+            return response()->json(['status' => true, 'response' => 'Record Created', 'data' => $checkout_session->url]);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => false, 'error' => $th->getMessage()]);
+        }
+    }
+
+    protected function payStore()
+    {
+        $checkout_session_id = $_GET['session_id'];
+
+        try {
+            $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
+
+            $session = $stripe->checkout->sessions->retrieve($checkout_session_id);
+            if(Booking::where('payment_id',$session->payment_intent)->exists()) redirect(env('PAYMENT_CANCEL_URL').'?failed=invalid request payment already exists on this session id');
+            Booking::create(['user_id'=>$session->metadata->user, 'slot_id'=>$session->metadata->slot, 'payment_id'=>$session->payment_intent, 'date'=>$session->metadata->date]);
+            Mail::to(User::find($session->metadata->user)->email)->send(new UserBookingMail($session->metadata));
+            Mail::to(ServiceSlot::with('service.barber')->find($session->metadata->slot)->service->barber->email)->send(new BarberBookingMail($session->metadata));
+            
+            return redirect(env('PAYMENT_SUCCESS_URL') . '?success=true');
+        } catch (Exception $e) {
+            return redirect(env('PAYMENT_CANCEL_URL').'?failed='.$e->getMessage());
+        }
     }
 }

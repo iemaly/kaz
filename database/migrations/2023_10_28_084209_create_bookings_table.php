@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->unsignedBigInteger('service_id')->nullable();
-            $table->foreign('service_id')->references('id')->on('barber_services')->onDelete('cascade');
+            $table->unsignedBigInteger('slot_id')->nullable();
+            $table->foreign('slot_id')->references('id')->on('service_slots')->onDelete('cascade');
             $table->date('date');
             $table->string('payment_id');
             $table->enum('status', ['pending', 'paid'])->default('paid');

@@ -13,7 +13,7 @@ class StoreBookingRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +24,8 @@ class StoreBookingRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'slot_id'=>'required|exists:service_slots,id',
+            'date'=>'required|date'
         ];
     }
 }
