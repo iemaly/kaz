@@ -41,6 +41,7 @@ class UpdateBarberServiceRequest extends FormRequest
             'description' => 'nullable',
             'price' => 'required|numeric',
             'image' => 'nullable|file',
+            'duration' => 'nullable|numeric',
         ];
     }
 }
