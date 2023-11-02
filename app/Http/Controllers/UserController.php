@@ -247,6 +247,7 @@ class UserController extends Controller
             Booking::create(['user_id'=>$session->metadata->user, 'slot_id'=>$session->metadata->slot, 'payment_id'=>$session->payment_intent, 'date'=>$session->metadata->date]);
             Mail::to(User::find($session->metadata->user)->email)->send(new UserBookingMail($session->metadata));
             Mail::to(ServiceSlot::with('service.barber')->find($session->metadata->slot)->service->barber->email)->send(new BarberBookingMail($session->metadata));
+            Mail::to(env('ADMIN_EMAIL'))->send(new BarberBookingMail($session->metadata));
             
             return redirect(env('PAYMENT_SUCCESS_URL') . '?success=true');
         } catch (Exception $e) {
