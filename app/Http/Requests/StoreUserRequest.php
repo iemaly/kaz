@@ -40,8 +40,18 @@ class StoreUserRequest extends FormRequest
             'fname' => 'required',
             'lname' => 'nullable',
             'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|unique:users,phone',
             'password' => 'required',
             'image' => 'nullable',
         ];
     }
+
+    // function messages()
+    // {
+    //     return 
+    //     [
+    //         'fname.required'=>'in this project fname is very required',
+    //         'email.required'=>'email is not required',
+    //     ];
+    // }
 }

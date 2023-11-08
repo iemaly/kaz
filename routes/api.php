@@ -24,6 +24,10 @@ Route::group(['middleware' => 'auth:admin_api', 'prefix' => 'admin'], function (
     // USER
     Route::resource('/users', 'App\Http\Controllers\UserController');
     Route::put('/users/{user}/active_deactive', [App\Http\Controllers\UserController::class, 'activate']);
+    
+    // BOOKINGS
+    Route::resource('/bookings', 'App\Http\Controllers\BookingController');
+    // Route::get('/bookings', [App\Http\Controllers\BookingController::class, 'index']);
 });
 
 // USER
@@ -35,6 +39,7 @@ Route::group(['middleware' => 'auth:user_api', 'prefix' => 'user'], function () 
 
     // BOOKING
     Route::post('/{barber_service}/booking', [App\Http\Controllers\UserController::class, 'pay']);
+    Route::post('/bookings', [App\Http\Controllers\UserController::class, 'book']);
 });
 
 // UNIVERSAL ROUTES

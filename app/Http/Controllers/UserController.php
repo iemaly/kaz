@@ -201,7 +201,27 @@ class UserController extends Controller
         return response(['status' => false, 'errors' => 'Token Incorrect Or Token Expired']);
     }
 
-    // PLAN MANAGEMENT
+    // BOOKING
+    function book(StoreBookingRequest $request)
+    {
+        $validatedData = $request->validated();
+
+        try {
+            $validatedData['user_id'] = auth()->id();
+            $booking = Booking::create($validatedData);
+
+            // SEND MAIL
+            Mail::to(auth()->user()->email)->send(new UserBookingMail($booking));
+            Mail::to(ServiceSlot::with('service.barber')->find($booking->slot_id)->service->barber->email)->send(new BarberBookingMail($booking));
+            Mail::to(env('ADMIN_EMAIL'))->send(new BarberBookingMail($booking));
+
+            return response()->json(['status' => true, 'response' => 'Record Created', 'data' => $booking]);
+        } catch (\Throwable $th) {
+            // return response()->json(['status' => false, 'error' => $th]);
+            return response()->json(['status' => false, 'error' => $th->getMessage()]);
+        }
+    }
+
     public function pay(StoreBookingRequest $request, BarberService $barber_service)
     {
         $validatedRequest = $request->validated();

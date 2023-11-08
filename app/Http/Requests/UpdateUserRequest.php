@@ -40,6 +40,11 @@ class UpdateUserRequest extends FormRequest
         return [
             'fname' => 'required',
             'lname' => 'nullable',
+            'phone' => [
+                'nullable',
+                Rule::unique('users', 'phone')
+                    ->ignore(auth('user_api')->check() ? auth('user_api')->user()->id : $this->user->id),
+            ],
             'email' => [
                 'required',
                 'email',

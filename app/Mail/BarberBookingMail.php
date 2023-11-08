@@ -21,13 +21,13 @@ class BarberBookingMail extends Mailable
      *
      * @return void
      */
-    public function __construct($metadata)
+    public function __construct($data)
     {
-        $this->user = User::find($metadata->user);
-        $this->barber = ServiceSlot::with('service.barber')->find($metadata->slot)->service->barber;
-        $this->service = ServiceSlot::find($metadata->slot)->service;
-        $this->slot = ServiceSlot::find($metadata->slot);
-        $this->date = $metadata->date;
+        $this->user = auth()->user();
+        $this->barber = ServiceSlot::with('service.barber')->find($data->slot_id)->service->barber;
+        $this->service = ServiceSlot::find($data->slot_id)->service;
+        $this->slot = ServiceSlot::find($data->slot_id);
+        $this->date = $data->date;
     }
 
     /**

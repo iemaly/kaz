@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreign('barber_id')->references('id')->on('barbers')->onDelete('cascade');
             $table->string('title');
             $table->longtext('description')->nullable();
-            $table->double('price');
+            $table->string('price');
             $table->string('duration')->nullable();
             $table->string('image')->nullable();
             $table->tinyInteger('status')->default(1);

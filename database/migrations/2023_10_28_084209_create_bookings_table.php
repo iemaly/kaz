@@ -20,8 +20,8 @@ return new class extends Migration
             $table->unsignedBigInteger('slot_id')->nullable();
             $table->foreign('slot_id')->references('id')->on('service_slots')->onDelete('cascade');
             $table->date('date');
-            $table->string('payment_id');
-            $table->enum('status', ['pending', 'paid'])->default('paid');
+            $table->string('payment_id')->nullable();
+            $table->enum('status', ['pending', 'paid', 'cash_on_arrival'])->default('cash_on_arrival');
             $table->timestamps();
         });
     }

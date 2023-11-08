@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Models\Booking;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BarberBookingMail;
+use App\Mail\UserBookingMail;
+use App\Models\ServiceSlot;
+
 
 class BookingController extends Controller
 {
@@ -15,7 +20,8 @@ class BookingController extends Controller
      */
     public function index()
     {
-        //
+        $bookings = Booking::with('user', 'slot.service.barber')->get();
+        return response()->json(['status'=>true, 'data'=>$bookings]);
     }
 
     /**
@@ -70,7 +76,21 @@ class BookingController extends Controller
      */
     public function update(UpdateBookingRequest $request, Booking $booking)
     {
-        //
+        $validatedData = $request->validated();
+
+        try {
+            $booking->update($validatedData);
+
+            // SEND MAIL
+            Mail::to($booking->user->email)->send(new UserBookingMail($booking));
+            Mail::to(ServiceSlot::with('service.barber')->find($booking->slot_id)->service->barber->email)->send(new BarberBookingMail($booking));
+            Mail::to(env('ADMIN_EMAIL'))->send(new BarberBookingMail($booking));
+
+            return response()->json(['status' => true, 'response' => 'Record Updated', 'data' => $booking]);
+        } catch (\Throwable $th) {
+            // return response()->json(['status' => false, 'error' => $th]);
+            return response()->json(['status' => false, 'error' => $th->getMessage()]);
+        }
     }
 
     /**
