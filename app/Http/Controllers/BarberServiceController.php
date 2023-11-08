@@ -15,7 +15,7 @@ class BarberServiceController extends Controller
 
     function index()
     {
-        $services = BarberService::where('barber_id', request()->barber)->orderBy('id', 'desc')->get();
+        $services = BarberService::with('timeslots')->where('barber_id', request()->barber)->orderBy('id', 'desc')->get();
         return response()->json(['status' => true, 'data' => $services]);
     }
 
@@ -75,7 +75,7 @@ class BarberServiceController extends Controller
 
     function show(BarberService $barber_service)
     {
-        return response()->json(['status' => true, 'data' => $barber_service]);
+        return response()->json(['status' => true, 'data' => $barber_service->load('timeslots')]);
     }
 
     function destroy(BarberService $barber_service)
