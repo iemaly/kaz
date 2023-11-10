@@ -24,6 +24,8 @@ class UserBookingMail extends Mailable
     public function __construct($data)
     {
         $this->user = auth()->user();
+        if(auth()->user()->getTable()=='admins') $this->user = User::find(request()->user);
+        // dd($this->user);
         $this->barber = ServiceSlot::with('service.barber')->find($data->slot_id)->service->barber;
         $this->service = ServiceSlot::find($data->slot_id)->service;
         $this->slot = ServiceSlot::find($data->slot_id);

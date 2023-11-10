@@ -208,10 +208,12 @@ class UserController extends Controller
 
         try {
             $validatedData['user_id'] = auth()->id();
+            // IF ADMIN CREATING ON BEHALF
+            if(auth()->user()->getTable()=='admins') $validatedData['user_id'] = request()->user;
             $booking = Booking::create($validatedData);
 
             // SEND MAIL
-            Mail::to(auth()->user()->email)->send(new UserBookingMail($booking));
+            Mail::to(auth()->user()->getTable()=='admins'?User::find($validatedData['user_id'])->email:auth()->user()->email)->send(new UserBookingMail($booking));
             Mail::to(ServiceSlot::with('service.barber')->find($booking->slot_id)->service->barber->email)->send(new BarberBookingMail($booking));
             Mail::to(env('ADMIN_EMAIL'))->send(new BarberBookingMail($booking));
 

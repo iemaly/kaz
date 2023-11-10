@@ -28,6 +28,8 @@ Route::group(['middleware' => 'auth:admin_api', 'prefix' => 'admin'], function (
     // BOOKINGS
     Route::resource('/bookings', 'App\Http\Controllers\BookingController');
     // Route::get('/bookings', [App\Http\Controllers\BookingController::class, 'index']);
+    Route::post('/book', [App\Http\Controllers\UserController::class, 'book']);
+    
 });
 
 // USER
