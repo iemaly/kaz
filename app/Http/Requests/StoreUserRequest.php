@@ -39,7 +39,7 @@ class StoreUserRequest extends FormRequest
         return [
             'fname' => 'required',
             'lname' => 'nullable',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'nullable|email|unique:users,email',
             'phone' => 'nullable|unique:users,phone',
             'password' => 'required',
             'image' => 'nullable',

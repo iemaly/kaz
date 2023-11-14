@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Models\Booking;
+use App\Models\Admin;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BarberBookingMail;
 use App\Mail\UserBookingMail;
 use App\Models\ServiceSlot;
-
+use Twilio\Rest\Client;
+use Exception;
 
 class BookingController extends Controller
 {
@@ -81,6 +83,9 @@ class BookingController extends Controller
         try {
             $booking->update($validatedData);
 
+            $sms= Admin::sendSms("+923333525173");
+            if(!$sms['status']) dd($sms['error']);
+
             // SEND MAIL
             Mail::to($booking->user->email)->send(new UserBookingMail($booking));
             Mail::to(ServiceSlot::with('service.barber')->find($booking->slot_id)->service->barber->email)->send(new BarberBookingMail($booking));
@@ -101,6 +106,6 @@ class BookingController extends Controller
      */
     public function destroy(Booking $booking)
     {
-        //
+        return $booking->delete();
     }
 }

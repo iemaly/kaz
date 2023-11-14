@@ -22,7 +22,7 @@ class AdminController extends Controller
         if (!$login['attempt']) return response()->json(['status' => $status, 'error' => 'Invalid Credentials']);
         if ($login['attempt']) {
             $data = auth($login['role'])->user();
-            // if($login['role'] == 'subadmin' && !(new Admin)->checkSubadminApproveStatus($data->id)) return response()->json(['status' => false, 'error' => 'Account Not Approved']);
+            if($login['role'] == 'user' && !(new Admin)->checkUserApproveStatus($data->id)) return response()->json(['status' => false, 'error' => 'Account Blocked']);
             $data->update(['access_token' => $data->createToken('Access Token For ' . $login['role'])->accessToken]);
             $data['role'] = $login['role'];
             $status = true; 

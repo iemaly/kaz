@@ -46,7 +46,7 @@ class UpdateUserRequest extends FormRequest
                     ->ignore(auth('user_api')->check() ? auth('user_api')->user()->id : $this->user->id),
             ],
             'email' => [
-                'required',
+                'nullable',
                 'email',
                 Rule::unique('users', 'email')
                     ->ignore(auth('user_api')->check() ? auth('user_api')->user()->id : $this->user->id),
