@@ -212,6 +212,12 @@ class UserController extends Controller
             if(auth()->user()->getTable()=='admins') $validatedData['user_id'] = request()->user;
             $booking = Booking::create($validatedData);
 
+            // SMS
+            $user = auth()->user();
+            if(auth()->user()->getTable()=='admins') $user = User::find(request()->user);
+            $sms= Admin::sendSms($user->phone, $booking);
+            if(!$sms['status']) dd($sms['error']);
+
             // SEND MAIL
             Mail::to(auth()->user()->getTable()=='admins'?User::find($validatedData['user_id'])->email:auth()->user()->email)->send(new UserBookingMail($booking));
             Mail::to(ServiceSlot::with('service.barber')->find($booking->slot_id)->service->barber->email)->send(new BarberBookingMail($booking));

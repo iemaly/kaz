@@ -6,6 +6,7 @@ use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Models\Booking;
 use App\Models\Admin;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BarberBookingMail;
 use App\Mail\UserBookingMail;
@@ -83,7 +84,10 @@ class BookingController extends Controller
         try {
             $booking->update($validatedData);
 
-            $sms= Admin::sendSms("+923333525173");
+            // SMS
+            $user = auth()->user();
+            if(auth()->user()->getTable()=='admins') $user = User::find(request()->user);
+            $sms= Admin::sendSms($user->phone, $booking);
             if(!$sms['status']) dd($sms['error']);
 
             // SEND MAIL

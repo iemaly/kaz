@@ -49,9 +49,22 @@ class Admin extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public static function sendSms($receiverNumber)
+    public static function sendSms($receiverNumber, $data)
     {
-        $message = "This is testing from hnh tech solutions";
+        $user = auth()->user();
+        if(auth()->user()->getTable()=='admins') $user = User::find(request()->user);
+        $barber = ServiceSlot::with('service.barber')->find($data->slot_id)->service->barber;
+        $service = ServiceSlot::find($data->slot_id)->service;
+        $slot = ServiceSlot::find($data->slot_id);
+        $date = $data->date;
+
+        $message = "
+            User: ".$user->fname." ".$user->lname."
+            Service: ".$service->title."
+            Barber: ".$barber->fname." ".$barber->lname."
+            Date: ".$date."
+            Time Slot: ".$slot->start_time."-".$slot->end_time."
+        ";
   
         try {
   
