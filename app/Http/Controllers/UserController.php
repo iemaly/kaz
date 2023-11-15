@@ -215,11 +215,14 @@ class UserController extends Controller
             // SMS
             $user = auth()->user();
             if(auth()->user()->getTable()=='admins') $user = User::find(request()->user);
-            $sms= Admin::sendSms($user->phone, $booking);
-            if(!$sms['status']) dd($sms['error']);
+            if($user->phone)
+            {
+                $sms= Admin::sendSms($user->phone, $booking);
+                if(!$sms['status']) dd($sms['error']);
+            }
 
             // SEND MAIL
-            Mail::to(auth()->user()->getTable()=='admins'?User::find($validatedData['user_id'])->email:auth()->user()->email)->send(new UserBookingMail($booking));
+            if($user->email) Mail::to(auth()->user()->getTable()=='admins'?User::find($validatedData['user_id'])->email:auth()->user()->email)->send(new UserBookingMail($booking));
             Mail::to(ServiceSlot::with('service.barber')->find($booking->slot_id)->service->barber->email)->send(new BarberBookingMail($booking));
             Mail::to(env('ADMIN_EMAIL'))->send(new BarberBookingMail($booking));
 

@@ -36,7 +36,8 @@ class LoginRequest extends FormRequest
     {
         return [
             'type' => 'required|in:admin,user',
-            'email' => 'required|exists:'.$this->type.'s,email|max:60',
+            'email' => 'nullable|max:60',
+            // 'phone' => 'nullable|exists:'.$this->type.'s,phone|max:60',
             'password' => 'required|max:60',
         ];
     }

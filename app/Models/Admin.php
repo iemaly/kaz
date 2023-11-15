@@ -94,6 +94,11 @@ class Admin extends Authenticatable
     public function login($email, $password, $type)
     {
         $attempt = auth($type)->attempt(['email' => $email, 'password' => $password]);
+        if($type=='user') 
+        {
+            $attempt = auth($type)->attempt(['email' => $email, 'password' => $password]);
+            if(!$attempt) $attempt = auth($type)->attempt(['phone' => "+".$email, 'password' => $password]);
+        }
         return ['status' => true, 'role' => $type, 'attempt' => $attempt];
     }
 
