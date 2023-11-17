@@ -13,6 +13,7 @@ use App\Mail\BarberBookingMail;
 use App\Mail\UserBookingMail;
 use App\Models\BarberService;
 use App\Models\Booking;
+use App\Models\Admin;
 use App\Models\ServiceSlot;
 use App\Models\User;
 use Exception;
@@ -218,7 +219,8 @@ class UserController extends Controller
             if($user->phone)
             {
                 $sms= Admin::sendSms($user->phone, $booking);
-                if(!$sms['status']) dd($sms['error']);
+                // if(!$sms['status']) dd($sms['error']);
+                if(!$sms['status']) return response()->json(['status'=>true, 'response' => 'Appointment booked but sms didnt sent']);
             }
 
             // SEND MAIL
