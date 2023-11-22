@@ -16,7 +16,7 @@ class BarberController extends Controller
 
     function index()
     {
-        $barbers = Barber::with('services.timeslots')->orderBy('id', 'desc')->get();
+        $barbers = Barber::with('services.timeslots')->where('status',1)->orderBy('id', 'desc')->get();
         return response()->json(['status' => true, 'data' => $barbers]);
     }
 
@@ -60,7 +60,7 @@ class BarberController extends Controller
     function show($barber)
     {
         // Find the barber with their associated services, time slots, and bookings
-        $barber = Barber::with('services.timeslots.bookings')->find($barber);
+        $barber = Barber::with('services.timeslots.bookings')->where(['id'=>$barber, 'status'=>1])->firstOrFail();
 
         // Get the date from the request, or use the current date if not provided
         $date = request('date', now()->toDateString());

@@ -208,25 +208,26 @@ class UserController extends Controller
         $validatedData = $request->validated();
 
         try {
+            $user = auth()->user();
+            if(auth()->user()->getTable()=='admins') $user = User::find(request()->user);
+            
             $validatedData['user_id'] = auth()->id();
             // IF ADMIN CREATING ON BEHALF
             if(auth()->user()->getTable()=='admins') $validatedData['user_id'] = request()->user;
             $booking = Booking::create($validatedData);
 
-            // SMS
-            $user = auth()->user();
-            if(auth()->user()->getTable()=='admins') $user = User::find(request()->user);
-            if($user->phone)
-            {
-                $sms= Admin::sendSms($user->phone, $booking);
-                // if(!$sms['status']) dd($sms['error']);
-                if(!$sms['status']) return response()->json(['status'=>true, 'response' => 'Appointment booked but sms didnt sent']);
-            }
-
             // SEND MAIL
             if($user->email) Mail::to(auth()->user()->getTable()=='admins'?User::find($validatedData['user_id'])->email:auth()->user()->email)->send(new UserBookingMail($booking));
             Mail::to(ServiceSlot::with('service.barber')->find($booking->slot_id)->service->barber->email)->send(new BarberBookingMail($booking));
             Mail::to(env('ADMIN_EMAIL'))->send(new BarberBookingMail($booking));
+
+            // SMS
+            if($user->phone)
+            {
+                $sms= Admin::sendSms($user->phone, $booking);
+                // if(!$sms['status']) return $sms['error'];
+                if(!$sms['status']) return response()->json(['status'=>true, 'response' => 'Appointment booked but sms didnt sent']);
+            }
 
             return response()->json(['status' => true, 'response' => 'Record Created', 'data' => $booking]);
         } catch (\Throwable $th) {
