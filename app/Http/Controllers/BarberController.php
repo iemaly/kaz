@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Http\Requests\UpdateBarberRequest;
 use App\Models\Barber;
+use App\Models\Booking;
+use App\Models\ServiceSlot;
+use Carbon\Carbon;
 
 class BarberController extends Controller
 {
@@ -57,32 +60,83 @@ class BarberController extends Controller
         }
     }
 
+    function convertTo24HourFormat($time)
+    {
+        // Convert the time to a Carbon instance
+        $carbonTime = Carbon::parse($time);
+
+        // Check if the time is in the AM range (9 AM to 11:59 AM)
+        if ($carbonTime->hour >= 9 && $carbonTime->hour < 12) {
+            // Format as 24-hour time
+            return $carbonTime->format('H:i');
+        } else {
+            // Add 12 hours and format as 24-hour time for PM range
+            return $carbonTime->addHours(12)->format('H:i');
+        }
+    }
+
     function show($barber)
     {
         // Find the barber with their associated services, time slots, and bookings
-        $barber = Barber::with('services.timeslots.bookings')->where(['id'=>$barber, 'status'=>1])->firstOrFail();
+        $barber = Barber::with('services.timeslots.bookings.slot')->where(['id' => $barber, 'status' => 1])->firstOrFail();
 
         // Get the date from the request, or use the current date if not provided
         $date = request('date', now()->toDateString());
+        // dd(now(), $date);
+        if(today()->gt($date)) return response()->json(['status'=>false, 'response'=>'Select today or greater date']);
 
         // Loop through the barber's services
-        foreach ($barber->services as $service) {
+        $data = $barber->toArray();
+        $data['services'] = [];
+        foreach ($barber->services as $i => $service) {
             // Loop through the time slots for each service
-            foreach ($service->timeslots as $timeslot) {
-                // Check if there are any bookings for this timeslot on the specified date
-                $isAvailable = $timeslot->bookings
-                    ->where('date', $date)
-                    ->isEmpty();
+            $dataService = $service->toArray();
+            $dataService['timeslots'] = [];
+            foreach ($service->timeslots as $key => $timeslot) {
 
-                // Add the 'is_available' attribute to the timeslot with the result
-                $timeslot->is_available = $isAvailable;
+                $currentTime = now();
+
+                // dd($currentTime, $currentTime->gt($this->convertTo24HourFormat($timeslot->start_time)));
+                // REMOVE SLOT IF TIME IS GREATER
+                if (today()->eq($date) && $currentTime->gt($this->convertTo24HourFormat($timeslot->start_time))) {
+                    // unset($service->timeslots[$key]);
+                    // $service->timeslots->forget($key);
+                    continue;
+                }
+                // $barber->services[$i]->timeslots = $service->timeslots->values();
+                // Subtract 1 minute from start_time and end_time
+                $startMinus1Minute = now()->parse($timeslot->start_time)->format('H:i:s');
+                $endMinus1Minute = now()->parse($timeslot->end_time)->format('H:i:s');
+
+                // Check if there are any bookings for this timeslot on the specified date
+                $bookings = Booking::with('slot.service.barber')
+                    ->where('date', $date)
+                    ->whereHas('slot.service.barber', function ($q) use ($barber) {
+                        $q->where('id', $barber->id);
+                    })
+                    ->get();
+
+                // Check if the timeslot is booked based on start and end time
+                $isBooked = $bookings->some(function ($booking) use ($startMinus1Minute, $endMinus1Minute) {
+                    $bookingStartTime = now()->parse($booking->slot->start_time)->format('H:i:s');
+                    $bookingEndTime = now()->parse($booking->slot->end_time)->format('H:i:s');
+
+                    return (
+                        $bookingStartTime >= $startMinus1Minute && $bookingStartTime <= $endMinus1Minute ||
+                        $bookingEndTime >= $startMinus1Minute && $bookingEndTime <= $endMinus1Minute
+                    );
+                });
+
+                // Lock the timeslot for all services if it's booked in any service
+                $timeslot->is_available = !$isBooked;
+                $dataService['timeslots'][] = $timeslot;
             }
+            $data['services'][] = $dataService;
         }
 
         // Return the response with the updated data
-        return response()->json(['status' => true, 'data' => $barber]);
+        return response()->json(['status' => true, 'data' => $data]);
     }
-
 
     function destroy($barber)
     {
